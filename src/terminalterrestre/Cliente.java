@@ -91,14 +91,14 @@ public class Cliente extends javax.swing.JFrame {
                 nuevoCliente.setEmail(_email);
                 nuevoCliente.setTelefono(_telefono);
            
-            revisaRepetidos(nuevoCliente);
+           // revisaRepetidos(nuevoCliente);
             
             _conexion = ConexionSQL.getConnection(); 
             PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL); 
             
             statement.setString(1, _nombreCliente);
             statement.setString(2,_email);
-            statement.setFloat(3,_telefono);
+            statement.setLong(3,_telefono);
             statement.setFloat(4,0);
 
             statement.executeUpdate();         
@@ -159,14 +159,14 @@ public class Cliente extends javax.swing.JFrame {
                 nuevoCliente.setEmail(_email);
                 nuevoCliente.setTelefono(_telefono);
            
-            revisaRepetidosModificados(nuevoCliente);
+            //revisaRepetidosModificados(nuevoCliente);
             
             _conexion = ConexionSQL.getConnection(); 
-            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);            
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);           
             
            statement.setString(1,_nombreCliente);
            statement.setString(2,_email);
-           statement.setFloat(3,_telefono);
+           statement.setLong(3,_telefono);
            statement.setFloat(4,_idCliente);        
 
            statement.executeUpdate();
@@ -190,15 +190,15 @@ public class Cliente extends javax.swing.JFrame {
     {
         for (ClienteAux cliente : _clientes) 
         {
-            if (cliente.getNomCliente().equals(nuevoCliente.getNomCliente())) 
-            {
+            /*if (cliente.getNomCliente().equals(nuevoCliente.getNomCliente())) 
+            {*/
                 if (cliente.getEmail().equals(nuevoCliente.getEmail()) || cliente.getTelefono() == nuevoCliente.getTelefono()) 
                 {
                     JOptionPane.showMessageDialog(null, "Elemento Repetido","Error", JOptionPane.ERROR_MESSAGE);
                     Exception exception = new IllegalArgumentException();           
                     throw exception; 
                 }
-            }            
+            //}            
         }
     }
 
@@ -282,7 +282,7 @@ public class Cliente extends javax.swing.JFrame {
         jLabel2.setText("Nombre del Cliente");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
-        jLabel3.setText("Telefono");
+        jLabel3.setText("Teléfono");
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel4.setText("Email");
@@ -296,7 +296,7 @@ public class Cliente extends javax.swing.JFrame {
                 {null, null, null, null, null, null}
             },
             new String [] {
-                "Id del Cliente", "Nombre del Cliente", "Email", "Telefono", "Cliente desde", "Número de Tarjetas"
+                "Id del Cliente", "Nombre del Cliente", "Email", "Teléfono", "Cliente desde", "Número de Tarjetas"
             }
         ));
         tablaCliente.addMouseListener(new java.awt.event.MouseAdapter() {

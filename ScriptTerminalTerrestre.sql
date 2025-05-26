@@ -122,6 +122,9 @@ CREATE TABLE InfoCliente.Cliente
 
 	CONSTRAINT PKOperador PRIMARY KEY (IdCliente)
 )
+ALTER TABLE InfoCliente.Cliente
+ADD CONSTRAINT uq_email UNIQUE (Email),
+ADD CONSTRAINT uq_telefono UNIQUE (Telefono);
 
 INSERT INTO InfoCliente.Cliente(NomCliente, Email, Telefono, ClienteDesde, NumTarjetas)
 VALUES ( 'Josue Torres', 'josue@uaslp.com', 4444276945, '2025-05-21',0)

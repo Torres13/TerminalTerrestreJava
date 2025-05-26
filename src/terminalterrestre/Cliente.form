@@ -153,7 +153,7 @@
         <Property name="font" type="java.awt.Font" editor="org.netbeans.beaninfo.editors.FontEditor">
           <Font name="Segoe UI" size="18" style="0"/>
         </Property>
-        <Property name="text" type="java.lang.String" value="Telefono"/>
+        <Property name="text" type="java.lang.String" value="Tel&#xe9;fono"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JLabel" name="jLabel4">
@@ -185,7 +185,7 @@
                 <Column editable="true" title="Id del Cliente" type="java.lang.Object"/>
                 <Column editable="true" title="Nombre del Cliente" type="java.lang.Object"/>
                 <Column editable="true" title="Email" type="java.lang.Object"/>
-                <Column editable="true" title="Telefono" type="java.lang.Object"/>
+                <Column editable="true" title="Tel&#xe9;fono" type="java.lang.Object"/>
                 <Column editable="true" title="Cliente desde" type="java.lang.Object"/>
                 <Column editable="true" title="N&#xfa;mero de Tarjetas" type="java.lang.Object"/>
               </Table>

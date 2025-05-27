@@ -4,17 +4,280 @@
  */
 package terminalterrestre;
 
-/**
- *
- * @author TorresJ2
- */
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
+import clasesAuxiliares.ClienteAux;
+import clasesAuxiliares.TarjetaClienteAux;
+import terminalterrestre.Estacion.IIdentificable;
+
 public class TarjetaCliente extends javax.swing.JFrame {
 
-    /**
-     * Creates new form TarjetaCliente
-     */
-    public TarjetaCliente() {
+    long _idTarjeta;
+    long _idCliente;
+    String _CCV;
+    String _mes;
+    String _anio;
+    String _fechaVenci;
+    String _banco;
+    String _tipo;
+    long _numTarjeta;
+    Connection _conexion;
+    List<ClienteAux> _clientes;
+    List<TarjetaClienteAux> _tarjetas;
+    DefaultTableModel _tablaTar;
+    
+    public TarjetaCliente() 
+    {
         initComponents();
+        _tablaTar = (DefaultTableModel) tablaTarjetas.getModel();
+        _clientes = new ArrayList<ClienteAux>();
+        _tarjetas = new ArrayList<TarjetaClienteAux>(); 
+        llenaClientes();
+        llenaBancosYTipos();
+        consultaDatos();    
+    }
+
+     public void llenaBancosYTipos()
+    {
+        cbBanco.removeAllItems();
+        cbBanco.addItem(""); 
+        cbBanco.addItem("Santander"); cbBanco.addItem("Banamex"); cbBanco.addItem("BBVA"); cbBanco.addItem("HSBC"); cbBanco.addItem("BanBajio");
+        cbBanco.addItem("Scotiabank"); cbBanco.addItem("Banorte"); cbBanco.addItem("Azteca"); cbBanco.addItem("Inbursa"); cbBanco.addItem("Afirme");
+
+        cbTipo.removeAllItems();
+        cbTipo.addItem(""); 
+        cbTipo.addItem("Crédito"); cbTipo.addItem("Débito");
+    }
+
+    private void llenaClientes() 
+    {
+         _clientes.clear();
+         cbCliente.removeAllItems();
+        cbCliente.addItem("");    
+
+        
+        String sentenciaSQL = "SELECT * FROM InfoCliente.Cliente";
+        
+        try
+        {
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);
+            ResultSet result = statement.executeQuery();
+            
+            while(result.next())
+            {
+                var nuevoCliente = new ClienteAux();
+                nuevoCliente.setIdCliente(result.getInt("IdCliente"));
+                nuevoCliente.setNomCliente(result.getString("NomCliente"));
+                _clientes.add(nuevoCliente); 
+            }
+            for (ClienteAux cliente : _clientes) 
+            {
+                var clienteConcatenado = cliente.getNomCliente() + " {" + cliente.getIdCliente() + "}";
+                cliente.setClienteConcatenado(clienteConcatenado);
+                cbCliente.addItem(clienteConcatenado);    
+            }
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al recuperar las Ciudades","Error", JOptionPane.ERROR_MESSAGE);            
+        } 
+    }
+
+    private void consultaDatos() 
+    {
+        _tablaTar.setRowCount(0);
+        _tarjetas.clear();
+        
+        String sentenciaSQL = "SELECT * FROM InfoCliente.TarjetaCliente";
+        
+        try
+        {
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);
+            ResultSet result = statement.executeQuery();
+            
+            while(result.next())
+            {            
+                _tablaTar.addRow(
+                        new Object[]
+                        {
+                            result.getInt("IdTarjeta"),
+                            result.getInt("IdCliente"),                           
+                            result.getString("Banco"),
+                            result.getString("Tipo"),
+                            result.getLong("NumTarjeta"),
+                            result.getString("FechaVenci"),
+                            result.getString("ConSeg")                          
+                        });
+                
+            }
+            rellenaConcatenados();
+        }
+        catch(Exception ex)
+        {
+           JOptionPane.showMessageDialog(null, "Error al recuperar datos","Error", JOptionPane.ERROR_MESSAGE);            
+        } 
+    }
+
+    private void rellenaConcatenados() 
+    {
+        for (int i = 0; i < _tablaTar.getRowCount(); i++) 
+        {
+            for (ClienteAux cliente : _clientes) 
+            {
+                if (cliente.getIdCliente() == (int)_tablaTar.getValueAt(i, 1)) 
+                {
+                    _tablaTar.setValueAt(cliente.getClienteConcatenado(), i, 1);
+                    break;                
+                }
+            }
+        }   
+    }
+
+    private void insertaDato()
+    {
+        String sentenciaSQL = "INSERT INTO InfoCliente.TarjetaCliente(IdCliente, Banco, Tipo, NumTarjeta, FechaVenci, ConSeg) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try
+        {
+           
+            
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL); 
+            
+            statement.setLong(1, _idCliente);
+            statement.setString(2,_banco);
+            statement.setString(3,_tipo);
+            statement.setLong(4,_numTarjeta);
+            statement.setString(5, _fechaVenci);
+            statement.setString(6,_CCV);
+
+            statement.executeUpdate();         
+           
+            consultaDatos();
+            
+            txbNumero.setText("");
+            txbAnio.setText("");
+            txbMes.setText("");
+            txbCCV.setText("");
+            cbCliente.setSelectedIndex(0);
+            cbTipo.setSelectedIndex(0);
+            cbBanco.setSelectedIndex(0);          
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al insertar","Error", JOptionPane.ERROR_MESSAGE); 
+            txbNumero.setText("");
+            txbAnio.setText("");
+            txbMes.setText("");
+            txbCCV.setText("");
+            cbCliente.setSelectedIndex(0);
+            cbTipo.setSelectedIndex(0);
+            cbBanco.setSelectedIndex(0); 
+                 
+        }
+    }
+
+    private void eliminaDato() 
+        {
+            String sentenciaSQL = "DELETE FROM InfoCliente.TarjetaCliente WHERE IdTarjeta = ?";
+            
+            try
+            {            
+                _conexion = ConexionSQL.getConnection(); 
+                PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);            
+                    
+                statement.setLong(1,_idTarjeta);
+                statement.executeUpdate();
+                
+                consultaDatos();
+            
+                txbNumero.setText("");
+                txbAnio.setText("");
+                txbMes.setText("");
+                txbCCV.setText("");
+                cbCliente.setSelectedIndex(0);
+                cbTipo.setSelectedIndex(0);
+                cbBanco.setSelectedIndex(0); 
+            
+            }
+            catch(Exception ex)
+            {
+                JOptionPane.showMessageDialog(null, "Error al eliminar ","Error", JOptionPane.ERROR_MESSAGE); 
+                txbNumero.setText("");
+                txbAnio.setText("");
+                txbMes.setText("");
+                txbCCV.setText("");
+                cbCliente.setSelectedIndex(0);
+                cbTipo.setSelectedIndex(0);
+                cbBanco.setSelectedIndex(0); 
+            }
+        }
+   
+    private void modificaDato()
+    {
+         String sentenciaSQL = "UPDATE InfoCliente.TarjetaCliente SET IdCliente = ?, Banco = ?, Tipo = ?, NumTarjeta = ?, FechaVenci = ?, ConSeg = ? WHERE IdTarjeta = ?";
+        
+        try
+        {          
+            
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);           
+            
+           statement.setLong(1,_idCliente);
+           statement.setString(2,_banco);
+           statement.setString(3,_tipo);
+           statement.setLong(4,_numTarjeta);        
+           statement.setString(5,_fechaVenci);   
+           statement.setString(6,_CCV);       
+           statement.setLong(7,_idTarjeta);        
+
+
+
+           statement.executeUpdate();
+           
+           consultaDatos();
+           
+            txbNumero.setText("");
+            txbAnio.setText("");
+            txbMes.setText("");
+            txbCCV.setText("");
+            cbCliente.setSelectedIndex(0);
+            cbTipo.setSelectedIndex(0);
+            cbBanco.setSelectedIndex(0); 
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al modificar ","Error", JOptionPane.ERROR_MESSAGE); 
+            txbNumero.setText("");
+            txbAnio.setText("");
+            txbMes.setText("");
+            txbCCV.setText("");
+            cbCliente.setSelectedIndex(0);
+            cbTipo.setSelectedIndex(0);
+            cbBanco.setSelectedIndex(0); 
+        }
+
+    }
+
+    public static <T extends IIdentificable> long buscaId(String concatenacion, List<T> lista) 
+    {
+        for (T elemento : lista) 
+        {
+            if (elemento.getConcatenado().equals(concatenacion)) 
+            {
+                return elemento.getId();
+            }
+        }
+        return -1;
     }
 
     /**
@@ -43,9 +306,9 @@ public class TarjetaCliente extends javax.swing.JFrame {
         cbTipo = new javax.swing.JComboBox<>();
         jLabel7 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        tablaTarjetas = new javax.swing.JTable();
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setTitle("Tarjeta Cliente");
 
         jLabel4.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -97,7 +360,7 @@ public class TarjetaCliente extends javax.swing.JFrame {
         jLabel7.setText("Tipo Tarjeta");
         jLabel7.setVerticalAlignment(javax.swing.SwingConstants.TOP);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        tablaTarjetas.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null},
                 {null, null, null, null, null, null, null},
@@ -108,7 +371,12 @@ public class TarjetaCliente extends javax.swing.JFrame {
                 "id Tarjeta", "Id del Cliente", "Banco", "Tipo", "Número de Tarjeta", "Vencimiento", "Código de Seguridad"
             }
         ));
-        jScrollPane1.setViewportView(jTable1);
+        tablaTarjetas.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaTarjetasMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(tablaTarjetas);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -181,7 +449,6 @@ public class TarjetaCliente extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addComponent(cbCliente, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cbBanco, javax.swing.GroupLayout.PREFERRED_SIZE, 30, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -200,18 +467,102 @@ public class TarjetaCliente extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnEliminarActionPerformed
+    private void tablaTarjetasMouseClicked(java.awt.event.MouseEvent evt) 
+    {
+        int row =-1 ;
+        row = tablaTarjetas.rowAtPoint(evt.getPoint());
 
-    private void btnAgregar2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregar2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnAgregar2ActionPerformed
+        _idTarjeta = (int)tablaTarjetas.getValueAt(row, 0);
+        _idCliente = buscaId((String)tablaTarjetas.getValueAt(row, 1), _clientes) ;
 
-    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnModificarActionPerformed
+        _banco = (String)tablaTarjetas.getValueAt(row, 2);
+        _tipo = (String)tablaTarjetas.getValueAt(row, 3);
+        _numTarjeta = (Long)tablaTarjetas.getValueAt(row, 4);
+        _fechaVenci = (String)tablaTarjetas.getValueAt(row, 5);
+        var fecha = _fechaVenci.split("/");
+        _mes = fecha[0]; _anio = fecha[1];
+        _CCV = (String)tablaTarjetas.getValueAt(row, 6);
 
+
+        cbBanco.setSelectedItem(_banco);
+        cbTipo.setSelectedItem(_tipo);
+        txbNumero.setText(_numTarjeta +"");
+        txbAnio.setText(_anio);
+        txbMes.setText(_mes);
+        txbCCV.setText(_CCV+"");
+
+        for (ClienteAux cliente : _clientes)         
+            if (cliente.getIdCliente() == _idCliente) 
+                cbCliente.setSelectedItem(cliente.getClienteConcatenado());
+
+
+    }
+
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+         _idCliente = buscaId((String)cbCliente.getSelectedItem(), _clientes);
+        _banco = (String)cbBanco.getSelectedItem();
+        _tipo = (String)cbTipo.getSelectedItem();
+        _numTarjeta = Long.parseLong(txbNumero.getText());
+        _fechaVenci = txbMes.getText() + "/"+ txbAnio.getText();
+        _CCV = txbCCV.getText();
+        if (_banco.isEmpty() || _tipo.isEmpty() || _fechaVenci == null) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+             eliminaDato();
+        } 
+
+    }
+
+    private void btnAgregar2ActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+        _idCliente = buscaId((String)cbCliente.getSelectedItem(), _clientes);
+        _banco = (String)cbBanco.getSelectedItem();
+        _tipo = (String)cbTipo.getSelectedItem();
+        _numTarjeta = Long.parseLong(txbNumero.getText());
+        _fechaVenci = txbMes.getText() + "/"+ txbAnio.getText();
+        _CCV = txbCCV.getText();
+        if (_banco.isEmpty() || _tipo.isEmpty() || _fechaVenci == null ) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        if (Integer.parseInt(txbAnio.getText()) < 2025 && Integer.parseInt(txbMes.getText()) < 8) 
+        {
+             JOptionPane.showMessageDialog(null, "Fecha Invalida ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+             insertaDato();
+        } 
+    }
+
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+        _idCliente = buscaId((String)cbCliente.getSelectedItem(), _clientes);
+        _banco = (String)cbBanco.getSelectedItem();
+        _tipo = (String)cbTipo.getSelectedItem();
+        _numTarjeta = Long.parseLong(txbNumero.getText());
+        _fechaVenci = txbMes.getText() + "/"+ txbAnio.getText();
+        _CCV = txbCCV.getText();
+        if (_banco.isEmpty() || _tipo.isEmpty() || _fechaVenci == null) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        if (Integer.parseInt(txbAnio.getText()) <= 2025 && Integer.parseInt(txbMes.getText()) < 8) 
+        {
+             JOptionPane.showMessageDialog(null, "Fecha Invalida ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+             modificaDato();
+        }
+
+    }
+
+    
     /**
      * @param args the command line arguments
      */
@@ -261,7 +612,7 @@ public class TarjetaCliente extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable tablaTarjetas;
     private javax.swing.JTextField txbAnio;
     private javax.swing.JTextField txbCCV;
     private javax.swing.JTextField txbMes;

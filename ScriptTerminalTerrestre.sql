@@ -143,3 +143,149 @@ CREATE TRIGGER trg_SetClienteDesde
 BEFORE INSERT ON InfoCliente.Cliente
 FOR EACH ROW
 EXECUTE FUNCTION set_cliente_desde();
+
+CREATE TABLE InfoCliente.TarjetaCliente
+(
+	IdTarjeta BIGSERIAL NOT NULL,
+	IdCliente BIGINT NOT NULL,
+	Banco VARCHAR(100) NOT NULL,
+	Tipo VARCHAR(100) NOT NULL,
+	NumTarjeta BIGINT NOT NULL, 
+	FechaVenci VARCHAR(100) NOT NULL,
+	ConSeg INT NOT NULL,
+
+	CONSTRAINT PKTarjetaCliente PRIMARY KEY (IdTarjeta),
+
+	CONSTRAINT FKCliente FOREIGN KEY (IdCliente) 
+	REFERENCES InfoCliente.Cliente(IdCliente)
+)
+
+ALTER TABLE InfoCliente.TarjetaCliente DROP COLUMN ConSeg;
+ALTER TABLE InfoCliente.TarjetaCliente ADD COLUMN ConSeg VARCHAR(3);
+
+
+ALTER TABLE InfoCliente.TarjetaCliente
+ADD CONSTRAINT uq_numTarjeta UNIQUE (NumTarjeta);
+
+ALTER TABLE InfoCliente.TarjetaCliente
+ADD CONSTRAINT chk_banco CHECK (Banco IN ('Santander','Banamex','BBVA','HSBC','BanBajio','Scotiabank','Banorte','Azteca','Inbursa','Afirme'));
+
+ALTER TABLE InfoCliente.TarjetaCliente
+ADD CONSTRAINT chk_tipo CHECK (Tipo IN ('Crédito','Débito'));
+
+CREATE OR REPLACE FUNCTION actualizar_num_tarjetas()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Actualizar el número de tarjetas para el nuevo cliente si hay un cambio de cliente
+    IF NEW.IdCliente IS DISTINCT FROM OLD.IdCliente THEN
+        UPDATE InfoCliente.Cliente
+        SET NumTarjetas = (
+            SELECT COUNT(*) 
+            FROM InfoCliente.TarjetaCliente 
+            WHERE IdCliente = NEW.IdCliente
+        )
+        WHERE IdCliente = NEW.IdCliente;
+
+        UPDATE InfoCliente.Cliente
+        SET NumTarjetas = (
+            SELECT COUNT(*) 
+            FROM InfoCliente.TarjetaCliente 
+            WHERE IdCliente = OLD.IdCliente
+        )
+        WHERE IdCliente = OLD.IdCliente;
+    ELSE
+        -- Si no hay cambio de cliente, actualizar normalmente
+        UPDATE InfoCliente.Cliente
+        SET NumTarjetas = (
+            SELECT COUNT(*) 
+            FROM InfoCliente.TarjetaCliente 
+            WHERE IdCliente = COALESCE(NEW.IdCliente, OLD.IdCliente)
+        )
+        WHERE IdCliente = COALESCE(NEW.IdCliente, OLD.IdCliente);
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+
+CREATE TRIGGER TGActualizaNumTarjetas
+AFTER INSERT OR UPDATE OR DELETE ON InfoCliente.TarjetaCliente
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_num_tarjetas();
+
+SELECT * FROM InfoCliente.TarjetaCliente
+
+CREATE TABLE  	
+(
+    IdItinerario BIGSERIAL NOT NULL,
+    IdSalida BIGINT NOT NULL,
+	IdLlegada BIGINT NOT NULL,   
+    Dias VARCHAR(50) NOT NULL,
+    HoraSalida VARCHAR(50) NOT NULL,
+	HoraLlegada VARCHAR(50) NOT NULL,
+    KMs INT NOT NULL, 
+
+    CONSTRAINT PKItinerario PRIMARY KEY (IdItinerario),
+
+	CONSTRAINT FKITerSalida FOREIGN KEY (IdSalida) 
+	REFERENCES Destinos.Terminal(IdTerminal),
+
+	CONSTRAINT FKITerLleg FOREIGN KEY (IdLlegada) 
+	REFERENCES Destinos.Terminal(IdTerminal)
+);
+
+INSERT INTO Destinos.Itinerario(IdSalida, IdLlegada, Dias, HoraSalida, HoraLlegada, KMs)
+VALUES ( 1, 5, 'L, M, V,', '7:00', '15:00', 800)
+
+SELECT * FROM Destinos.Itinerario
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

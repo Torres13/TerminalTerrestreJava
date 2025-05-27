@@ -4,17 +4,203 @@
  */
 package terminalterrestre;
 
-/**
- *
- * @author TorresJ2
- */
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.JCheckBox;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
+import clasesAuxiliares.ClienteAux;
+import clasesAuxiliares.EstacionAux;
+import clasesAuxiliares.ItinerarioAux;
+import clasesAuxiliares.TerminalAux;
+
 public class Itinerario extends javax.swing.JFrame {
 
-    /**
-     * Creates new form Itinerario
-     */
+    Long _idItinerario;
+    Long _idSalida;
+    Long _idLlegada;
+    String _dias;
+    String _horaSalida;
+    String _horaLlegada;
+    Integer _kms;
+    Connection _conexion;
+    DefaultTableModel _tablaIti;
+    List<TerminalAux> _terminales;
+    List<ItinerarioAux> _itinierarios;
+    
     public Itinerario() {
+
         initComponents();
+        _tablaIti = (DefaultTableModel) tablaItinerario.getModel();
+        _terminales = new ArrayList<TerminalAux>();
+        _itinierarios = new ArrayList<ItinerarioAux>(); 
+        llenaListas();
+        consultaDatos();
+        
+    }
+
+    private void llenaListas() 
+    {
+        llenaTerminales();
+        llenaEstaciones();
+        cbDestino.removeAllItems(); cbDestino.addItem("");        
+        cbOrigen.removeAllItems(); cbOrigen.addItem("");        
+        try
+        {
+            for (TerminalAux terminal : _terminales) 
+            {
+                terminal.setTerminalConcatenada(
+                    terminal.getIdTerminal() + "-" + terminal.getNomTerminal() + " (" + terminal.getNomEstacion() + ") "
+                );
+                cbDestino.addItem(terminal.getTerminalConcatenada());  
+                cbOrigen.addItem(terminal.getTerminalConcatenada());  
+            }
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al concatenar","Error", JOptionPane.ERROR_MESSAGE);            
+        }  
+    }
+
+    private void llenaTerminales() 
+    {
+         _terminales.clear();
+               
+        String sentenciaSQL = "SELECT * FROM Destinos.Terminal";
+        
+        try
+        {
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);
+            ResultSet result = statement.executeQuery();
+            
+            while(result.next())
+            {
+                 var nuevaTerminal = new TerminalAux();                
+                nuevaTerminal.setIdTerminal(result.getInt("IdTerminal"));
+                nuevaTerminal.setNomTerminal(result.getString("NomTerminal"));
+                nuevaTerminal.setIdEstacion(result.getInt("IdEstacion"));
+
+                _terminales.add(nuevaTerminal);
+            }          
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al recuperar las Terminales","Error", JOptionPane.ERROR_MESSAGE);            
+        } 
+    }
+
+    private void llenaEstaciones()
+    {
+       List<TerminalAux> _estaciones = new  ArrayList<TerminalAux>();; 
+        String sentenciaSQL = "SELECT * FROM Destinos.Estacion";
+        
+        try
+        {
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);
+            ResultSet result = statement.executeQuery();
+            
+            while(result.next())
+            {
+                var nuevaEstacion = new TerminalAux();                
+                nuevaEstacion.setIdEstacion(result.getInt("IdEstacion"));
+                nuevaEstacion.setNomEstacion(result.getString("NomEstacion"));
+             
+                _estaciones.add(nuevaEstacion); 
+            }
+            for (TerminalAux terminal : _terminales) 
+            {
+                for (TerminalAux estacion : _estaciones)
+                {
+                    if (terminal.getIdEstacion() == estacion.getIdEstacion())
+                    {
+                        terminal.setNomEstacion(estacion.getNomEstacion());
+                        break;
+                    }
+                    
+                }                
+            }
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al recuperar las Estaciones","Error", JOptionPane.ERROR_MESSAGE);            
+        }  
+    }
+    
+   public String recuperaDias() 
+    {
+        StringBuilder dias = new StringBuilder();
+
+        if (ChBLunes.isSelected()) 
+            dias.append("L, ");
+        if (ChBMartes.isSelected()) 
+            dias.append("Ma, ");
+        if (ChBMiercoles.isSelected()) 
+            dias.append("Mi, ");
+        if (ChBJueves.isSelected()) 
+            dias.append("J, ");
+        if (ChBViernes.isSelected()) 
+            dias.append("V, ");
+        if (ChBSabado.isSelected()) 
+            dias.append("S, ");
+        if (ChBDomingo.isSelected()) 
+            dias.append("D ");
+
+        return dias.toString().trim();
+    }
+    
+    private void consultaDatos() 
+    {
+        _tablaIti.setRowCount(0);
+        _itinierarios.clear();
+        
+        String sentenciaSQL = "SELECT * FROM Destinos.Itinerario";
+        
+        try
+        {
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);
+            ResultSet result = statement.executeQuery();
+            
+            while(result.next())
+            {
+                var nuevoIti = new ItinerarioAux();                
+                nuevoIti.setIdItinerario(result.getInt("IdItinerario"));
+                nuevoIti.setIdTerSal(result.getInt("IdSalida"));
+                nuevoIti.setIdTerLleg(result.getInt("IdLlegada"));
+                nuevoIti.setDia(result.getString("Dias"));
+                nuevoIti.setHoraSalida(result.getString("HoraSalida"));
+                nuevoIti.setHoraLlegada(result.getString("HoraLlegada"));
+                nuevoIti.setKilometros(result.getInt("KMs"));
+
+
+
+                _tablaIti.addRow(
+                        new Object[]
+                        {
+                            result.getInt("IdItinerario"),
+                           result.getInt("IdSalida"),
+                           result.getInt("IdLlegada"),
+                           result.getString("Dias"),
+                           result.getString("HoraSalida"),
+                           result.getString("HoraLlegada"),
+                           result.getInt("KMs")
+                        });
+                
+                _itinierarios.add(nuevoIti); 
+            }
+        }
+        catch(Exception ex)
+        {
+           JOptionPane.showMessageDialog(null, "Error al recuperar datos","Error", JOptionPane.ERROR_MESSAGE);            
+        } 
+        
     }
 
     /**
@@ -50,7 +236,7 @@ public class Itinerario extends javax.swing.JFrame {
         btnAgregar2 = new javax.swing.JButton();
         btnModificar = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable2 = new javax.swing.JTable();
+        tablaItinerario = new javax.swing.JTable();
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -65,7 +251,7 @@ public class Itinerario extends javax.swing.JFrame {
         ));
         jScrollPane1.setViewportView(jTable1);
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel2.setText("Kilómetros");
@@ -145,7 +331,7 @@ public class Itinerario extends javax.swing.JFrame {
             }
         });
 
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+        tablaItinerario.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
                 {null, null, null, null, null, null, null},
                 {null, null, null, null, null, null, null},
@@ -156,7 +342,12 @@ public class Itinerario extends javax.swing.JFrame {
                 "Id Itinerario", "Terminal de Salida", "Terminal de Llegada", "Días", "Hora de Salida", "Hora de Llegada", "Kilómetros"
             }
         ));
-        jScrollPane2.setViewportView(jTable2);
+        tablaItinerario.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tablaItinerarioMouseClicked(evt);
+            }
+        });
+        jScrollPane2.setViewportView(tablaItinerario);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -272,17 +463,25 @@ public class Itinerario extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEliminarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnEliminarActionPerformed
+    private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+        
+    }
 
-    private void btnAgregar2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregar2ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnAgregar2ActionPerformed
+    private void btnAgregar2ActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+        var dias = recuperaDias();
+    }
 
-    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnModificarActionPerformed
+    private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+        
+    }
+
+    private void tablaItinerarioMouseClicked(java.awt.event.MouseEvent evt) 
+    {
+
+    }
 
     /**
      * @param args the command line arguments
@@ -341,7 +540,7 @@ public class Itinerario extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTable jTable1;
-    private javax.swing.JTable jTable2;
+    private javax.swing.JTable tablaItinerario;
     private javax.swing.JTextField txbHoraLlegada;
     private javax.swing.JTextField txbHoraSalida;
     private javax.swing.JTextField txbKiloemtros;

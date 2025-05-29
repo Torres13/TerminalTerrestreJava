@@ -3,8 +3,11 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/ConexionSQL.java</file>
-            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/Ciudad.java</file>
+            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/PanelControl.java</file>
+            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/Salida.java</file>
+            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/Transaccion.java</file>
+            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/Boleto.java</file>
+            <file>file:/C:/Proyectos/Financiera/TerminalTerrestre/src/terminalterrestre/Asiento10.java</file>
         </group>
     </open-files>
 </project-private>

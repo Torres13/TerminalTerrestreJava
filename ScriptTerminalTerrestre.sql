@@ -218,7 +218,7 @@ EXECUTE FUNCTION actualizar_num_tarjetas();
 
 SELECT * FROM InfoCliente.TarjetaCliente
 
-CREATE TABLE  	
+CREATE TABLE Destinos.Itinerario  	
 (
     IdItinerario BIGSERIAL NOT NULL,
     IdSalida BIGINT NOT NULL,
@@ -242,50 +242,341 @@ VALUES ( 1, 5, 'L, M, V,', '7:00', '15:00', 800)
 
 SELECT * FROM Destinos.Itinerario
 
+CREATE TABLE Pasajero (
+    IdPasajero BIGSERIAL NOT NULL,
+    NombrePasajero VARCHAR(200) NOT NULL,
+    TipoPasajero VARCHAR(50) NOT NULL,
+    FechaNacimiento DATE NOT NULL,
+	Edad INT,
+ 
+	CONSTRAINT PKPasajero PRIMARY KEY(IdPasajero)
+);
+
+CREATE OR REPLACE FUNCTION calcular_edad()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.Edad := EXTRACT(YEAR FROM CURRENT_DATE) - EXTRACT(YEAR FROM NEW.FechaNacimiento) -
+               CASE WHEN TO_CHAR(NEW.FechaNacimiento, 'MMDD') > TO_CHAR(CURRENT_DATE, 'MMDD') THEN 1 ELSE 0 END;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER TGCalcularEdad
+BEFORE INSERT OR UPDATE ON Pasajero
+FOR EACH ROW
+EXECUTE FUNCTION calcular_edad();
+
+INSERT INTO Pasajero(NombrePasajero, TipoPasajero, FechaNacimiento)
+VALUES ('Josue Torres', 'Adulto', '11-13-1997')
+
+SELECT * FROM Pasajero
+
+DROP TABLE Pasajero
+
+
+CREATE TABLE Transporte
+(
+    IdTransporte BIGSERIAL  NOT NULL,
+    Matricula VARCHAR(20) NOT NULL,
+    CapacidadLugares INT NOT NULL,
+    CapacidadGasolina INT NOT NULL,
+    Modelo VARCHAR(50) NOT NULL,
+    Marca VARCHAR(50) NOT NULL,
+    TipoTransporte VARCHAR(50) NOT NULL,
+
+    CONSTRAINT PKTransporte PRIMARY KEY (IdTransporte)
+);
+
+ALTER TABLE Transporte
+ADD CONSTRAINT uq_Matricula UNIQUE (Matricula);
+
+ALTER TABLE Transporte
+ADD CONSTRAINT chk_tipo CHECK (TipoTransporte IN ('Van','Autobús'));
+
+ALTER TABLE Transporte
+ADD CONSTRAINT chk_CapLug CHECK (CapacidadLugares IN (6,10));
+
+INSERT INTO Transporte(Matricula, CapacidadLugares, CapacidadGasolina, Modelo, Marca, TipoTransporte)
+VALUES ('UXG-169-D', 6, 40, '2025', 'Mercedes Benz', 'Van')
+
+SELECT * FROM Transporte
+
+CREATE SCHEMA Ventas
+
+CREATE TABLE Ventas.Salida
+(
+    IdSalida BIGSERIAL NOT NULL,
+    IdTransporte BIGINT NOT NULL,
+	IdOperador BIGINT NOT NULL, 
+	IdItinerario BIGINT NOT NULL,     
+    PrecioSalida FLOAT NOT NULL, 
+
+    CONSTRAINT PKSalida PRIMARY KEY (IdSalida),
+
+	CONSTRAINT FKIdTransporteSalida FOREIGN KEY (IdTransporte) 
+	REFERENCES Transporte(IdTransporte),
+
+	CONSTRAINT FKOperadorSalida FOREIGN KEY (IdOperador) 
+	REFERENCES Operador(IdOperador),
+
+	CONSTRAINT FKItinerarioSalida FOREIGN KEY (IdItinerario) 
+	REFERENCES Destinos.Itinerario(IdItinerario)
+);
+
+DROP TABLE Ventas.Salida
+
+INSERT INTO Ventas.Salida(IdTransporte, IdOperador, IdItinerario, PrecioSalida)
+VALUES ( 1, 1, 2, 10)
+
+SELECT * FROM Ventas.Salida
+
+CREATE TABLE Ventas.Transaccion
+(
+    IdTransaccion BIGSERIAL NOT NULL,
+    IdSalida BIGINT NOT NULL,
+	IdTarjeta BIGINT NOT NULL, 
+	FechaTransaccion DATE DEFAULT CURRENT_TIMESTAMP,     
+    Total FLOAT, 
+
+    CONSTRAINT PKTransaccion PRIMARY KEY (IdTransaccion),
+
+	CONSTRAINT FKIdSalidaTransaccion FOREIGN KEY (IdSalida) 
+	REFERENCES Ventas.Salida(IdSalida),
+
+	CONSTRAINT FKIdTarjetaTransaccion FOREIGN KEY (IdTarjeta) 
+	REFERENCES InfoCliente.TarjetaCliente(IdTarjeta)
+);
+
+INSERT INTO Ventas.Transaccion(IdSalida, IdTarjeta, Total)
+VALUES ( 1, 7, 0)
+
+SELECT * FROM Ventas.Transaccion
+
+
+CREATE TABLE Ventas.Asiento
+(
+	IdAsiento BIGSERIAL NOT NULL,
+    IdSalida BIGINT NOT NULL,
+	Disponibilidad INT NOT NULL,
+	NumAsiento INT NOT NULL,
+
+	CONSTRAINT PKAsiento PRIMARY KEY (IdAsiento),
+
+	CONSTRAINT FKIdSalidaAsiento FOREIGN KEY (IdSalida) 
+	REFERENCES Ventas.Salida(IdSalida)
+)
+
+SELECT * FROM Ventas.Asiento
+SELECT * FROM Ventas.Boleto
+
+
+CREATE TABLE Ventas.Boleto
+(
+    IdBoleto BIGSERIAL NOT NULL,
+    IdAsiento BIGINT NOT NULL,
+	IdTransaccion BIGINT NOT NULL, 
+	IdPasajero BIGINT NOT NULL,     
+    SubTotal INT, 
+
+    CONSTRAINT PKBoleto PRIMARY KEY (IdBoleto),
+
+	CONSTRAINT FKIdAsientoBoleto FOREIGN KEY (IdAsiento) 
+	REFERENCES Ventas.Asiento(IdAsiento),
+
+	CONSTRAINT FKTransaccionBoleto FOREIGN KEY (IdTransaccion) 
+	REFERENCES Ventas.Transaccion(IdTransaccion),
+
+	CONSTRAINT FKPasajeroBoleto FOREIGN KEY (IdPasajero) 
+	REFERENCES Pasajero(IdPasajero)
+);
+
+
+
+CREATE OR REPLACE FUNCTION calcular_subtotal()
+RETURNS TRIGGER AS $$
+DECLARE
+    precioSalida FLOAT;
+    kms INT;
+BEGIN
+    -- Obtener PrecioSalida desde la tabla Salida
+    SELECT s.PrecioSalida INTO precioSalida
+    FROM Ventas.Salida s
+    JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+    WHERE t.IdTransaccion = NEW.IdTransaccion;
+
+    -- Obtener KMs desde la tabla Itinerario
+    SELECT i.KMs INTO kms
+    FROM Destinos.Itinerario i
+    JOIN Ventas.Salida s ON i.IdItinerario = s.IdItinerario
+    JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+    WHERE t.IdTransaccion = NEW.IdTransaccion;
+
+    -- Evitar valores NULL en cálculos
+    NEW.SubTotal := COALESCE(precioSalida, 0) * COALESCE(kms, 0);
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger con BEFORE para evitar recursión infinita
+CREATE TRIGGER trigger_calcular_subtotal
+BEFORE INSERT OR UPDATE ON Ventas.Boleto
+FOR EACH ROW
+EXECUTE FUNCTION calcular_subtotal();
 
 
 
 
+CREATE OR REPLACE FUNCTION actualizar_total_transaccion()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Si el boleto se está eliminando, ajustar el Total de la transacción anterior
+    IF TG_OP = 'DELETE' THEN
+        UPDATE Ventas.Transaccion
+        SET Total = COALESCE(Total, 0) - COALESCE(OLD.SubTotal, 0)
+        WHERE IdTransaccion = OLD.IdTransaccion;
+    END IF;
+
+    -- Si el boleto se actualiza y cambia de transacción, restamos el SubTotal de la anterior y recalculamos la nueva
+    IF TG_OP = 'UPDATE' AND OLD.IdTransaccion <> NEW.IdTransaccion THEN
+        -- Restar el subtotal de la transacción anterior
+        UPDATE Ventas.Transaccion
+        SET Total = COALESCE(Total, 0) - COALESCE(OLD.SubTotal, 0)
+        WHERE IdTransaccion = OLD.IdTransaccion;
+    END IF;
+
+    -- Recalcular el total para la transacción nueva o afectada
+    UPDATE Ventas.Transaccion
+    SET Total = (
+        SELECT COALESCE(SUM(SubTotal), 0)
+        FROM Ventas.Boleto
+        WHERE IdTransaccion = COALESCE(NEW.IdTransaccion, OLD.IdTransaccion)
+    )
+    WHERE IdTransaccion = COALESCE(NEW.IdTransaccion, OLD.IdTransaccion);
+
+    RETURN NULL; -- No es necesario devolver NEW ya que es un AFTER trigger
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger para INSERT, UPDATE y DELETE en Boleto
+CREATE TRIGGER trigger_actualizar_total_transaccion
+AFTER INSERT OR UPDATE OR DELETE ON Ventas.Boleto
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_total_transaccion();
+
+
+SELECT IdTransporte FROM Ventas.Salida WHERE IdSalida IN (SELECT IdTransaccion FROM Ventas.Boleto);
+
+SELECT * FROM Ventas.Boleto;
 
 
 
+SELECT s.IdTransporte, t.IdSalida, b.IdTransaccion
+FROM Ventas.Salida s
+JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+JOIN Ventas.Boleto b ON t.IdTransaccion = b.IdTransaccion;
 
 
+CREATE OR REPLACE FUNCTION actualizar_capacidad_transporte()
+RETURNS TRIGGER AS $$
+DECLARE 
+    transporteActual BIGINT;
+    transporteAnterior BIGINT;
+BEGIN
+    -- Obtener el transporte actual basado en la nueva transacción
+    SELECT s.IdTransporte INTO transporteActual
+    FROM Ventas.Salida s
+    JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+    WHERE t.IdTransaccion = NEW.IdTransaccion;
+
+    -- Si la acción es DELETE, incrementar CapacidadLugares en el transporte correspondiente
+    IF TG_OP = 'DELETE' THEN
+        SELECT s.IdTransporte INTO transporteAnterior
+        FROM Ventas.Salida s
+        JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+        WHERE t.IdTransaccion = OLD.IdTransaccion;
+
+        UPDATE Transporte
+        SET CapacidadLugares = CapacidadLugares + 1
+        WHERE IdTransporte = transporteAnterior;
+    END IF;
+
+    -- Si la acción es UPDATE y cambia de transporte, ajustar ambos
+    IF TG_OP = 'UPDATE' AND OLD.IdTransaccion <> NEW.IdTransaccion THEN
+        SELECT s.IdTransporte INTO transporteAnterior
+        FROM Ventas.Salida s
+        JOIN Ventas.Transaccion t ON s.IdSalida = t.IdSalida
+        WHERE t.IdTransaccion = OLD.IdTransaccion;
+
+        UPDATE Transporte SET CapacidadLugares = CapacidadLugares + 1 WHERE IdTransporte = transporteAnterior;
+        UPDATE Transporte SET CapacidadLugares = CapacidadLugares - 1 WHERE IdTransporte = transporteActual;
+    END IF;
+
+    -- Si la acción es INSERT, disminuir CapacidadLugares en el transporte correspondiente
+    IF TG_OP = 'INSERT' THEN
+        UPDATE Transporte
+        SET CapacidadLugares = CapacidadLugares - 1
+        WHERE IdTransporte = transporteActual;
+    END IF;
+
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Crear el trigger con AFTER para reflejar cambios luego de la inserción/modificación
+CREATE TRIGGER trigger_actualizar_capacidad_transporte
+AFTER INSERT OR UPDATE OR DELETE ON Ventas.Boleto
+FOR EACH ROW
+EXECUTE FUNCTION actualizar_capacidad_transporte();
+
+SELECT 
+    p.TipoPasajero,
+    COUNT(b.IdBoleto) AS TotalBoletos
+FROM 
+    Pasajero p
+INNER JOIN 
+    Ventas.Boleto b ON p.IdPasajero = b.IdPasajero
+GROUP BY 
+    p.TipoPasajero;
 
 
+SELECT 
+    p.TipoPasajero,
+    COUNT(b.IdBoleto) AS TotalBoletos
+FROM 
+    Pasajero p
+INNER JOIN 
+    Ventas.Boleto b ON p.IdPasajero = b.IdPasajero
+WHERE 
+    p.TipoPasajero = 'Estudiante'
+GROUP BY 
+    p.TipoPasajero;
 
 
+--Consulta de tipo de pasajeeros segun su tipo la transaccion 
+SELECT 
+    p.TipoPasajero,
+    COUNT(b.IdBoleto) AS TotalBoletos
+FROM 
+    Ventas.Boleto b
+INNER JOIN 
+    Pasajero p ON b.IdPasajero = p.IdPasajero
+WHERE 
+    b.IdTransaccion = 8 
+    AND p.TipoPasajero = 'Adulto' 
+GROUP BY 
+    p.TipoPasajero;
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+--Consulta de Boletos segun tipo de pasajero
+SELECT 
+    b.IdBoleto,
+    b.SubTotal
+FROM 
+    Ventas.Boleto b
+JOIN 
+    Pasajero p ON b.IdPasajero = p.IdPasajero
+WHERE 
+    p.TipoPasajero = 'Adulto'; 
 
 

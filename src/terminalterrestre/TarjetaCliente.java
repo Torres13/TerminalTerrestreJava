@@ -473,7 +473,7 @@ public class TarjetaCliente extends javax.swing.JFrame {
         row = tablaTarjetas.rowAtPoint(evt.getPoint());
 
         _idTarjeta = (int)tablaTarjetas.getValueAt(row, 0);
-        _idCliente = buscaId((String)tablaTarjetas.getValueAt(row, 1), _clientes) ;
+        _idCliente = buscaId((String)tablaTarjetas.getValueAt(row, 1), _clientes);
 
         _banco = (String)tablaTarjetas.getValueAt(row, 2);
         _tipo = (String)tablaTarjetas.getValueAt(row, 3);

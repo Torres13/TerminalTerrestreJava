@@ -16,7 +16,7 @@ public class TerminalTerrestre {
     public static void main(String[] args) {
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new PanelControl().setVisible(true);
+                new Login().setVisible(true);
             }
         });
     }

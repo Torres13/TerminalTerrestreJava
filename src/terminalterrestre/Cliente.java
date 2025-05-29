@@ -10,12 +10,10 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.sound.sampled.FloatControl;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
 import clasesAuxiliares.ClienteAux;
-import clasesAuxiliares.OperadorAux;
 
 public class Cliente extends javax.swing.JFrame {
 
@@ -183,38 +181,6 @@ public class Cliente extends javax.swing.JFrame {
              txbNombre.setText("");
             txbTelefono.setText("");
             txbEmail.setText("");
-        }
-    }
-
-    private void revisaRepetidos(ClienteAux nuevoCliente) throws Exception
-    {
-        for (ClienteAux cliente : _clientes) 
-        {
-            /*if (cliente.getNomCliente().equals(nuevoCliente.getNomCliente())) 
-            {*/
-                if (cliente.getEmail().equals(nuevoCliente.getEmail()) || cliente.getTelefono() == nuevoCliente.getTelefono()) 
-                {
-                    JOptionPane.showMessageDialog(null, "Elemento Repetido","Error", JOptionPane.ERROR_MESSAGE);
-                    Exception exception = new IllegalArgumentException();           
-                    throw exception; 
-                }
-            //}            
-        }
-    }
-
-    private void revisaRepetidosModificados(ClienteAux nuevoCliente) throws Exception
-    {
-        for (ClienteAux cliente : _clientes) 
-        {
-            if (cliente.getNomCliente().equals(nuevoCliente.getNomCliente())) 
-            {
-                if (cliente.getEmail().equals(nuevoCliente.getEmail()) && cliente.getTelefono() == nuevoCliente.getTelefono()) 
-                {
-                    JOptionPane.showMessageDialog(null, "Elemento Repetido","Error", JOptionPane.ERROR_MESSAGE);
-                    Exception exception = new IllegalArgumentException();           
-                    throw exception; 
-                }
-            }            
         }
     }
 

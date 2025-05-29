@@ -10,20 +10,18 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JCheckBox;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-import clasesAuxiliares.ClienteAux;
-import clasesAuxiliares.EstacionAux;
 import clasesAuxiliares.ItinerarioAux;
 import clasesAuxiliares.TerminalAux;
+import terminalterrestre.Estacion.IIdentificable;
 
 public class Itinerario extends javax.swing.JFrame {
 
-    Long _idItinerario;
-    Long _idSalida;
-    Long _idLlegada;
+    long _idItinerario;
+    long _idSalida;
+    long _idLlegada;
     String _dias;
     String _horaSalida;
     String _horaLlegada;
@@ -32,8 +30,9 @@ public class Itinerario extends javax.swing.JFrame {
     DefaultTableModel _tablaIti;
     List<TerminalAux> _terminales;
     List<ItinerarioAux> _itinierarios;
+    String USUARIO;
     
-    public Itinerario() {
+    public Itinerario(String USUARIO) {
 
         initComponents();
         _tablaIti = (DefaultTableModel) tablaItinerario.getModel();
@@ -41,7 +40,16 @@ public class Itinerario extends javax.swing.JFrame {
         _itinierarios = new ArrayList<ItinerarioAux>(); 
         llenaListas();
         consultaDatos();
+        this.USUARIO = USUARIO;
+        seteaTabla();
         
+    }
+
+    private void seteaTabla()
+    {
+        if (USUARIO.equals("Vendedor")) {
+            btnEliminar.setEnabled(false);
+        }
     }
 
     private void llenaListas() 
@@ -133,7 +141,7 @@ public class Itinerario extends javax.swing.JFrame {
         }  
     }
     
-   public String recuperaDias() 
+    private String recuperaDias() 
     {
         StringBuilder dias = new StringBuilder();
 
@@ -195,12 +203,251 @@ public class Itinerario extends javax.swing.JFrame {
                 
                 _itinierarios.add(nuevoIti); 
             }
+            rellenaConcatenados();
         }
         catch(Exception ex)
         {
            JOptionPane.showMessageDialog(null, "Error al recuperar datos","Error", JOptionPane.ERROR_MESSAGE);            
         } 
         
+    }
+
+    private void insertaDato()
+    {
+        String sentenciaSQL = "INSERT INTO Destinos.Itinerario(IdSalida, IdLlegada, Dias, HoraSalida, HoraLlegada, KMs) VALUES (?, ?, ?, ?, ?, ?)";
+        
+        try
+        {         
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL); 
+
+            var nuevoIti = new ItinerarioAux();                
+                nuevoIti.setIdTerSal(_idSalida);
+                nuevoIti.setIdTerLleg(_idLlegada);
+                nuevoIti.setDia(_dias);
+                nuevoIti.setHoraSalida(_horaSalida);
+                nuevoIti.setHoraLlegada(_horaLlegada);
+                nuevoIti.setKilometros(_kms);
+
+            verificaRepetidos(nuevoIti);
+            
+            
+            statement.setLong(1, _idSalida);
+            statement.setLong(2,_idLlegada);
+            statement.setString(3,_dias);
+            statement.setString(4,_horaSalida);
+            statement.setString(5, _horaLlegada);
+            statement.setInt(6,_kms);
+
+            statement.executeUpdate();  
+
+           _itinierarios.add(nuevoIti); 
+
+            consultaDatos();
+            
+            txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();          
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al insertar","Error", JOptionPane.ERROR_MESSAGE); 
+            txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();
+                             
+        }
+    }   
+
+    private void verificaRepetidos(ItinerarioAux nuevoIti) throws Exception
+    {
+        for (ItinerarioAux itinerario : _itinierarios) 
+        {
+            if (itinerario.getDia().equals(nuevoIti.getDia())) 
+            {
+                if (itinerario.getIdTerSal() == nuevoIti.getIdTerSal()) 
+                {
+                    if (itinerario.getIdTerLleg() == nuevoIti.getIdTerLleg()) 
+                    {
+                        if (itinerario.getHoraSalida().equals(nuevoIti.getHoraSalida())) 
+                        {
+                            if (itinerario.getHoraLlegada().equals(nuevoIti.getHoraLlegada()))
+                            {
+                                JOptionPane.showMessageDialog(null, "Elemento Repetido","Error", JOptionPane.ERROR_MESSAGE);
+                                Exception exception = new IllegalArgumentException();           
+                                throw exception;
+
+                            }
+                        }
+                    }                
+                }
+            }
+            if (nuevoIti.getIdTerSal() == nuevoIti.getIdTerLleg()) 
+            {
+                JOptionPane.showMessageDialog(null, "Origen y Destino Igual ","Error", JOptionPane.ERROR_MESSAGE);
+                Exception exception = new IllegalArgumentException();           
+                throw exception;
+                
+            }
+        }
+    }
+
+    private void rellenaConcatenados() 
+    {
+        for (int i = 0; i < _tablaIti.getRowCount(); i++) 
+        {
+            for (TerminalAux terminal : _terminales) 
+            {
+                if (terminal.getIdTerminal() == (int)_tablaIti.getValueAt(i, 1)) 
+                {
+                    _tablaIti.setValueAt(terminal.getTerminalConcatenada(), i, 1);
+                    break;                
+                }
+            }
+        }  
+        for (int i = 0; i < _tablaIti.getRowCount(); i++) 
+        {
+            for (TerminalAux terminal : _terminales) 
+            {
+                if (terminal.getIdTerminal() == (int)_tablaIti.getValueAt(i, 2)) 
+                {
+                    _tablaIti.setValueAt(terminal.getTerminalConcatenada(), i, 2);
+                    break;                
+                }
+            }
+        } 
+    }
+
+    private void limpiaDias() 
+    {
+       ChBLunes.setSelected(false);
+       ChBMartes.setSelected(false);
+       ChBMiercoles.setSelected(false);
+       ChBJueves.setSelected(false);
+       ChBViernes.setSelected(false);
+       ChBSabado.setSelected(false);
+       ChBDomingo.setSelected(false);
+    }
+
+    private void rellenaDias()
+    {
+        if (_dias.contains("L"))            
+            ChBLunes.setSelected(true);
+        if (_dias.contains("Ma"))
+            ChBMartes.setSelected(true);
+        if (_dias.contains("Mi"))
+            ChBMiercoles.setSelected(true);
+        if (_dias.contains("J"))
+            ChBJueves.setSelected(true);
+        if (_dias.contains("V"))
+            ChBViernes.setSelected(true);
+        if (_dias.contains("S"))
+            ChBSabado.setSelected(true);
+        if (_dias.contains("D"))
+            ChBDomingo.setSelected(true);
+    }
+
+    private void eliminaDato() 
+    {
+        String sentenciaSQL = "DELETE FROM  Destinos.Itinerario WHERE IdItinerario = ?";
+        
+        try
+        {            
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);            
+                
+            statement.setLong(1,_idItinerario);
+            statement.executeUpdate();
+            
+            consultaDatos();
+           
+            txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();
+           
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al eliminar ","Error", JOptionPane.ERROR_MESSAGE); 
+            txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();
+        }
+    }
+
+    private void modificaDato()
+    {
+         String sentenciaSQL = "UPDATE Destinos.Itinerario SET IdSalida = ?, IdLlegada = ?, Dias = ?, HoraSalida = ?, HoraLlegada = ?, KMs = ? WHERE IdItinerario = ?";
+        
+        try
+        {          
+             var nuevoIti = new ItinerarioAux();                
+                nuevoIti.setIdTerSal(_idSalida);
+                nuevoIti.setIdTerLleg(_idLlegada);
+                nuevoIti.setDia(_dias);
+                nuevoIti.setHoraSalida(_horaSalida);
+                nuevoIti.setHoraLlegada(_horaLlegada);
+                nuevoIti.setKilometros(_kms);
+
+            verificaRepetidos(nuevoIti);
+
+            _conexion = ConexionSQL.getConnection(); 
+            PreparedStatement statement = _conexion.prepareStatement(sentenciaSQL);           
+            
+           statement.setLong(1,_idSalida);
+           statement.setLong(2,_idLlegada);
+           statement.setString(3,_dias);
+           statement.setString(4,_horaSalida);        
+           statement.setString(5,_horaLlegada);   
+           statement.setInt(6,_kms);       
+           statement.setLong(7,_idItinerario);        
+
+           statement.executeUpdate();
+           
+           consultaDatos();
+           
+           txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();; 
+        }
+        catch(Exception ex)
+        {
+            JOptionPane.showMessageDialog(null, "Error al modificar ","Error", JOptionPane.ERROR_MESSAGE); 
+            txbHoraSalida.setText("");
+            txbHoraLlegada.setText("");
+            txbKiloemtros.setText("");
+            cbDestino.setSelectedIndex(0);
+            cbOrigen.setSelectedIndex(0);
+            limpiaDias();
+        }
+
+    }
+
+    public static <T extends IIdentificable> long buscaId(String concatenacion, List<T> lista) 
+    {
+        for (T elemento : lista) 
+        {
+            if (elemento.getConcatenado().equals(concatenacion)) 
+            {
+                return elemento.getId();
+            }
+        }
+        return -1;
     }
 
     /**
@@ -252,6 +499,7 @@ public class Itinerario extends javax.swing.JFrame {
         jScrollPane1.setViewportView(jTable1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("Itinerario");
 
         jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
         jLabel2.setText("Kilómetros");
@@ -464,22 +712,80 @@ public class Itinerario extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnEliminarActionPerformed(java.awt.event.ActionEvent evt) 
-    {
-        
+    {     
+        if (_horaLlegada.isEmpty() || _horaSalida.isEmpty() || _dias.isEmpty()) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+             eliminaDato();
+        } 
     }
 
     private void btnAgregar2ActionPerformed(java.awt.event.ActionEvent evt) 
     {
-        var dias = recuperaDias();
+         _idSalida = buscaId((String)cbOrigen.getSelectedItem(), _terminales);
+         _idLlegada = buscaId((String)cbDestino.getSelectedItem(), _terminales);
+         
+        _dias = recuperaDias();
+        _horaSalida = (String)txbHoraSalida.getText();
+        _horaLlegada = (String)txbHoraLlegada.getText(); 
+        _kms = Integer.parseInt(txbKiloemtros.getText());
+
+        if (_horaLlegada.isEmpty() || _horaSalida.isEmpty() || _dias.isEmpty()) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+             insertaDato();
+        } 
+        
     }
 
     private void btnModificarActionPerformed(java.awt.event.ActionEvent evt) 
     {
+        _idSalida = buscaId((String)cbOrigen.getSelectedItem(), _terminales);
+         _idLlegada = buscaId((String)cbDestino.getSelectedItem(), _terminales);
+         
+        _dias = recuperaDias();
+        _horaSalida = (String)txbHoraSalida.getText();
+        _horaLlegada = (String)txbHoraLlegada.getText(); 
+        _kms = Integer.parseInt(txbKiloemtros.getText());
+        
+         if (_horaLlegada.isEmpty() || _horaSalida.isEmpty() || _dias.isEmpty()) 
+        {
+            JOptionPane.showMessageDialog(null, "Campos incompletos ","Error", JOptionPane.ERROR_MESSAGE); 
+        }
+        else
+        {
+            modificaDato();
+        } 
         
     }
 
     private void tablaItinerarioMouseClicked(java.awt.event.MouseEvent evt) 
     {
+        int row =-1 ;
+        row = tablaItinerario.rowAtPoint(evt.getPoint());
+
+        _idItinerario = (int)tablaItinerario.getValueAt(row, 0);
+        _idSalida = buscaId((String)tablaItinerario.getValueAt(row, 1), _terminales);
+        _idLlegada = buscaId((String)tablaItinerario.getValueAt(row, 2), _terminales);
+
+        _dias = (String)tablaItinerario.getValueAt(row, 3);
+        _horaSalida = (String)tablaItinerario.getValueAt(row, 4);
+        _horaLlegada = (String)tablaItinerario.getValueAt(row, 5);
+        _kms = (int)tablaItinerario.getValueAt(row, 6);    
+       
+        txbKiloemtros.setText(_kms +"");
+        txbHoraSalida.setText(_horaSalida);
+        txbHoraLlegada.setText(_horaLlegada);
+        cbOrigen.setSelectedItem(tablaItinerario.getValueAt(row, 1));
+        cbDestino.setSelectedItem(tablaItinerario.getValueAt(row, 2));  
+        limpiaDias();
+        rellenaDias();     
 
     }
 
@@ -513,7 +819,7 @@ public class Itinerario extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Itinerario().setVisible(true);
+                new Itinerario("").setVisible(true);
             }
         });
     }

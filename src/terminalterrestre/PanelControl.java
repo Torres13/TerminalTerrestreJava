@@ -4,17 +4,52 @@
  */
 package terminalterrestre;
 
+import java.util.HashMap;
+import java.util.Map;
+import terminalterrestre.Boleto;
+
 /**
  *
  * @author TorresJ2
  */
 public class PanelControl extends javax.swing.JFrame {
-
+public Map<String, Boleto> formulariosAbiertos = new HashMap<>();
     /**
      * Creates new form PanelControl
      */
-    public PanelControl() {
+    String USUARIO;
+    public PanelControl(String USUARIO) {
         initComponents();
+        this.USUARIO = USUARIO;
+        seteaPanel();
+    }
+
+    private void seteaPanel() 
+    {
+        if (USUARIO.equals("Vendedor"))
+        {
+           btnCiudad.setEnabled(false);
+           btnEstacion.setEnabled(false);
+           btnTerminal.setEnabled(false);
+           btnOperador.setEnabled(false);
+           btnPasjero.setEnabled(false);
+           btnCliente.setEnabled(false);
+           btnTarjeta.setEnabled(false);
+           btnTransporte.setEnabled(false);
+        }
+        if (USUARIO.equals("Customer Service"))
+        {
+           btnCiudad.setEnabled(false);
+           btnEstacion.setEnabled(false);
+           btnTerminal.setEnabled(false);
+           btnOperador.setEnabled(false);
+           btnPasjero.setEnabled(false);
+           btnItinerario.setEnabled(false);
+           btnTransaccion.setEnabled(false);
+           btnTransporte.setEnabled(false);
+           btnBoleto.setEnabled(false);
+           btnSalida.setEnabled(false);
+        }
     }
 
     /**
@@ -27,66 +62,107 @@ public class PanelControl extends javax.swing.JFrame {
     private void initComponents() {
 
         jLabel3 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        jButton2 = new javax.swing.JButton();
-        jButton3 = new javax.swing.JButton();
-        jButton4 = new javax.swing.JButton();
-        jButton5 = new javax.swing.JButton();
-        jButton6 = new javax.swing.JButton();
-        jButton7 = new javax.swing.JButton();
+        btnCiudad = new javax.swing.JButton();
+        btnOperador = new javax.swing.JButton();
+        btnEstacion = new javax.swing.JButton();
+        btnTerminal = new javax.swing.JButton();
+        btnCliente = new javax.swing.JButton();
+        btnTarjeta = new javax.swing.JButton();
+        btnItinerario = new javax.swing.JButton();
+        btnPasjero = new javax.swing.JButton();
+        btnTransporte = new javax.swing.JButton();
+        btnSalida = new javax.swing.JButton();
+        btnTransaccion = new javax.swing.JButton();
+        btnBoleto = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Panel de Control");
 
         jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        jLabel3.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel3.setText("Seleccione la opción deseada ");
 
-        jButton1.setText("Ciudad");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        btnCiudad.setText("Ciudad");
+        btnCiudad.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                btnCiudadActionPerformed(evt);
             }
         });
 
-        jButton2.setText("Operador");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        btnOperador.setText("Operador");
+        btnOperador.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                btnOperadorActionPerformed(evt);
             }
         });
 
-        jButton3.setText("Estación");
-        jButton3.addActionListener(new java.awt.event.ActionListener() {
+        btnEstacion.setText("Estación");
+        btnEstacion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton3ActionPerformed(evt);
+                btnEstacionActionPerformed(evt);
             }
         });
 
-        jButton4.setText("Terminal");
-        jButton4.addActionListener(new java.awt.event.ActionListener() {
+        btnTerminal.setText("Terminal");
+        btnTerminal.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton4ActionPerformed(evt);
+                btnTerminalActionPerformed(evt);
             }
         });
 
-        jButton5.setText("Cliente");
-        jButton5.addActionListener(new java.awt.event.ActionListener() {
+        btnCliente.setText("Cliente");
+        btnCliente.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton5ActionPerformed(evt);
+                btnClienteActionPerformed(evt);
             }
         });
 
-        jButton6.setText("Tarjeta Cliente");
-        jButton6.addActionListener(new java.awt.event.ActionListener() {
+        btnTarjeta.setText("Tarjeta Cliente");
+        btnTarjeta.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton6ActionPerformed(evt);
+                btnTarjetaActionPerformed(evt);
             }
         });
 
-        jButton7.setText("Itinerario");
-        jButton7.addActionListener(new java.awt.event.ActionListener() {
+        btnItinerario.setText("Itinerario");
+        btnItinerario.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton7ActionPerformed(evt);
+                btnItinerarioActionPerformed(evt);
+            }
+        });
+
+        btnPasjero.setText("Pasajero");
+        btnPasjero.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnPasjeroActionPerformed(evt);
+            }
+        });
+
+        btnTransporte.setText("Transporte");
+        btnTransporte.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTransporteActionPerformed(evt);
+            }
+        });
+
+        btnSalida.setText("Salida");
+        btnSalida.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSalidaActionPerformed(evt);
+            }
+        });
+
+        btnTransaccion.setText("Transacción");
+        btnTransaccion.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnTransaccionActionPerformed(evt);
+            }
+        });
+
+        btnBoleto.setText("Boleto");
+        btnBoleto.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBoletoActionPerformed(evt);
             }
         });
 
@@ -95,28 +171,36 @@ public class PanelControl extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(25, 25, 25)
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnTerminal)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jButton1)
-                        .addGap(30, 30, 30)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 237, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnCiudad)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(btnTransaccion)
                             .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton2)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 40, Short.MAX_VALUE)
-                                .addComponent(jButton5)
-                                .addGap(48, 48, 48)
-                                .addComponent(jButton7))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jButton4)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jButton3)
-                                .addGap(130, 130, 130)
-                                .addComponent(jButton6)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addGap(36, 36, 36))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(btnOperador)
+                                        .addGap(26, 26, 26)
+                                        .addComponent(btnCliente)
+                                        .addGap(31, 31, 31))
+                                    .addGroup(layout.createSequentialGroup()
+                                        .addComponent(btnPasjero)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                        .addComponent(btnTarjeta)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnTransporte)
+                                    .addComponent(btnItinerario))
+                                .addGap(13, 13, 13)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnSalida)
+                                    .addComponent(btnBoleto, javax.swing.GroupLayout.Alignment.TRAILING)))))
+                    .addComponent(btnEstacion))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -125,77 +209,124 @@ public class PanelControl extends javax.swing.JFrame {
                 .addComponent(jLabel3)
                 .addGap(27, 27, 27)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton1)
-                    .addComponent(jButton2)
-                    .addComponent(jButton5)
-                    .addComponent(jButton7))
+                    .addComponent(btnCiudad)
+                    .addComponent(btnOperador)
+                    .addComponent(btnItinerario)
+                    .addComponent(btnSalida)
+                    .addComponent(btnCliente))
                 .addGap(34, 34, 34)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jButton3)
-                    .addComponent(jButton6))
+                    .addComponent(btnEstacion)
+                    .addComponent(btnPasjero)
+                    .addComponent(btnTransporte)
+                    .addComponent(btnBoleto)
+                    .addComponent(btnTarjeta))
                 .addGap(26, 26, 26)
-                .addComponent(jButton4)
-                .addContainerGap(33, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(btnTerminal)
+                    .addComponent(btnTransaccion))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void btnCiudadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCiudadActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Ciudad().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_btnCiudadActionPerformed
 
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+    private void btnEstacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnEstacionActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Estacion().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton3ActionPerformed
+    }//GEN-LAST:event_btnEstacionActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+    private void btnOperadorActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnOperadorActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Operador().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }//GEN-LAST:event_btnOperadorActionPerformed
 
-    private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
+    private void btnTerminalActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTerminalActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Terminal().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton4ActionPerformed
+    }//GEN-LAST:event_btnTerminalActionPerformed
 
-    private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
+    private void btnClienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnClienteActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new Cliente().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton5ActionPerformed
+    }//GEN-LAST:event_btnClienteActionPerformed
 
-    private void jButton6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton6ActionPerformed
+    private void btnTarjetaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTarjetaActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new TarjetaCliente().setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton6ActionPerformed
+    }//GEN-LAST:event_btnTarjetaActionPerformed
 
-    private void jButton7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton7ActionPerformed
+    private void btnItinerarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnItinerarioActionPerformed
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Itinerario().setVisible(true);
+                new Itinerario(USUARIO).setVisible(true);
             }
         });
-    }//GEN-LAST:event_jButton7ActionPerformed
+    }//GEN-LAST:event_btnItinerarioActionPerformed
+
+    private void btnPasjeroActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPasjeroActionPerformed
+       java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Pasajero().setVisible(true);
+            }
+        });
+    }//GEN-LAST:event_btnPasjeroActionPerformed
+
+    private void btnTransporteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTransporteActionPerformed
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Transporte().setVisible(true);
+            }
+        });
+    }//GEN-LAST:event_btnTransporteActionPerformed
+
+    private void btnSalidaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSalidaActionPerformed
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Salida(USUARIO).setVisible(true);
+            }
+        });
+    }//GEN-LAST:event_btnSalidaActionPerformed
+
+    private void btnTransaccionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnTransaccionActionPerformed
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Transaccion(USUARIO).setVisible(true);
+            }
+        });
+    }//GEN-LAST:event_btnTransaccionActionPerformed
+
+    private void btnBoletoActionPerformed(java.awt.event.ActionEvent evt) 
+    {
+       java.awt.EventQueue.invokeLater(new Runnable() {
+            public void run() {
+                new Boleto(USUARIO).setVisible(true);
+            }
+        });
+    }
 
     /**
      * @param args the command line arguments
@@ -227,19 +358,24 @@ public class PanelControl extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new PanelControl().setVisible(true);
+                new PanelControl("").setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
-    private javax.swing.JButton jButton3;
-    private javax.swing.JButton jButton4;
-    private javax.swing.JButton jButton5;
-    private javax.swing.JButton jButton6;
-    private javax.swing.JButton jButton7;
+    private javax.swing.JButton btnBoleto;
+    private javax.swing.JButton btnCiudad;
+    private javax.swing.JButton btnCliente;
+    private javax.swing.JButton btnEstacion;
+    private javax.swing.JButton btnItinerario;
+    private javax.swing.JButton btnOperador;
+    private javax.swing.JButton btnPasjero;
+    private javax.swing.JButton btnSalida;
+    private javax.swing.JButton btnTarjeta;
+    private javax.swing.JButton btnTerminal;
+    private javax.swing.JButton btnTransaccion;
+    private javax.swing.JButton btnTransporte;
     private javax.swing.JLabel jLabel3;
     // End of variables declaration//GEN-END:variables
 }
